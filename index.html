@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>        
+        body {
+            font-size: 12pt;
+        }
+
+        svg text {
+            cursor: default;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="weatherwheel.js"></script>
+    <script src="weather.js"></script>
+    <script src="https://unpkg.com/d3-sankey@0"></script>
+
+    <script>
+        const icon = {
+            clear: "images/clear.svg",
+            cloudy: "images/cloudy.svg",
+            overcast: "images/overcast.svg",
+            rain: "images/rain.svg",
+            snow: "images/snow.svg"
+        }
+    </script>
+</head>
+<body>
+    <div id="wheel">
+<form id="options" oninput="refresh()">
+        Diameter: <input name="diameter" type="range" min="0" max="2048" value="640" />
+    </form>
+</div> 
+<div id="wsankey">
+<form id="option" >Month: <select name="month">
+  <option value="1">January</option>
+  <option value="2">February</option>
+  <option value="3">March</option>
+  <option value="4">April</option>
+  <option value="5">May</option>
+  <option value="6">June</option>
+  <option value="7">July</option>
+  <option value="8">August</option>
+  <option value="9">September</option>
+  <option value="10">October</option>
+  <option value="11">November</option>
+  <option value="12">December</option>
+</select><span>&nbsp;&nbsp;&nbsp;</span>
+Sort: 
+<input name="sort" id="none" type="radio" value="0" group="s"><label for="none">None</label>
+<input name="sort" id="ctor" type="radio" value="1" group="s" checked><label for="ctor">Clear to Rain</label>
+<input name="sort" id="rtoc" type="radio" value="2" group="s"><label for="rtoc">Rain to Clear</label>
+</form>
+</div>
+    <script>
+        var t;
+        const refresh = () => {
+            const diameter = +options.diameter.value;
+            clearTimeout(t);
+            t = setTimeout(() => {
+                d3.csv("seattle.csv", d3.autoType).then(data => {
+                    const div=d3.select("#wheel")
+                          div.select("svg").remove()
+                    const svg = d3.select("#wheel")
+                        
+                        .append("svg")
+                        .attr("classed","mx")
+                        .attr("viewBox", `${-diameter / 2} ${-diameter / 2} ${diameter} ${diameter}`)
+                        .style("width", diameter)
+                        .style("height", diameter);
+
+                    const wheel = new WeatherWheel(svg)
+                        .size([diameter, diameter])
+                        .icon(icon)
+                        .data(data)
+                        .render();
+                });
+            }, 50);
+        }
+
+        refresh();
+    </script>
+    <script>
+
+        var width = 1024, height = 968;
+
+        const weatherIcons = {
+            clear: "images/clear.svg",
+            cloudy: "images/cloudy.svg",
+            overcast: "images/overcast.svg",
+            rain: "images/rain.svg",
+            snow: "images/snow.svg"
+        }
+
+        d3.csv("seattle_19.csv", d3.autoType).then(function (data) {
+
+            const svg = d3.select("#wsankey").append("svg")
+                .attr("cursor", "default")
+                .attr("font-size", "11pt")
+                .attr("width", width)
+                .attr("height", height);            
+
+            data = data.filter(d => new Date(d["date"]).getMonth() + 1 === 1);
+
+            new WeatherChart(svg)
+                .size(width, 500)
+                .icon(weatherIcons)
+                .sort(+option.sort)
+                .render(data);
+
+        });
+
+    </script>
+</body>
+</html>
